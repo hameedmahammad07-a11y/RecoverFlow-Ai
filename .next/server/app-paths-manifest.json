@@ -1,0 +1,21 @@
+{
+  "/analytics/page": "app/analytics/page.js",
+  "/api/analytics/route": "app/api/analytics/route.js",
+  "/api/dashboard/route": "app/api/dashboard/route.js",
+  "/api/events/route": "app/api/events/route.js",
+  "/api/incidents/route": "app/api/incidents/route.js",
+  "/api/instant-checkout/verify/route": "app/api/instant-checkout/verify/route.js",
+  "/api/payments/route": "app/api/payments/route.js",
+  "/api/predictions/route": "app/api/predictions/route.js",
+  "/api/recoveries/[paymentId]/action/route": "app/api/recoveries/[paymentId]/action/route.js",
+  "/api/recoveries/route": "app/api/recoveries/route.js",
+  "/api/settings/route": "app/api/settings/route.js",
+  "/instant-checkout/page": "app/instant-checkout/page.js",
+  "/live-payments/page": "app/live-payments/page.js",
+  "/page": "app/page.js",
+  "/predictions/page": "app/predictions/page.js",
+  "/radar/page": "app/radar/page.js",
+  "/recovery-automation/page": "app/recovery-automation/page.js",
+  "/recovery/page": "app/recovery/page.js",
+  "/webhooks/page": "app/webhooks/page.js"
+}

@@ -1,0 +1,195 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Merchant {
+  id                         String              @id @default(cuid())
+  name                       String
+  email                      String              @unique
+  storeName                  String
+  phone                      String?
+  baselineUpiFailRate        Float               @default(4.0)
+  baselineCardFailRate       Float               @default(2.5)
+  baselineNetBankingFailRate Float               @default(4.5)
+  autoRecoveryEnabled        Boolean             @default(true)
+  maxRecoveryAttempts        Int                 @default(3)
+  quietHoursStart            String              @default("22:00")
+  quietHoursEnd              String              @default("08:00")
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @updatedAt
+
+  customers                  Customer[]
+  orders                     Order[]
+  payments                   Payment[]
+  recoveryWorkflows          RecoveryWorkflow[]
+  predictions                PaymentPrediction[]
+  incidents                  Incident[]
+  auditLogs                  AuditLog[]
+}
+
+model Customer {
+  id                      String             @id @default(cuid())
+  merchantId              String
+  merchant                Merchant           @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  name                    String
+  email                   String?
+  phone                   String?
+  consentOptOut           Boolean            @default(false)
+  preferredChannel        String             @default("WHATSAPP")
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+
+  orders                  Order[]
+  payments                Payment[]
+  recoveryWorkflows       RecoveryWorkflow[]
+}
+
+model Order {
+  id                String             @id @default(cuid())
+  merchantId        String
+  merchant          Merchant           @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  customerId        String?
+  customer          Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  orderNumber       String             @unique
+  amount            Float
+  currency          String             @default("INR")
+  itemsJson         String             @default("[]")
+  status            String             @default("PENDING") // PENDING, COMPLETED, CANCELLED, ABANDONED
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  payments          Payment[]
+}
+
+model Payment {
+  id                String             @id @default(cuid())
+  merchantId        String
+  merchant          Merchant           @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  customerId        String?
+  customer          Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  orderId           String?
+  order             Order?             @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  amount            Float
+  currency          String             @default("INR")
+  paymentMethod     String             // UPI, CARD, NETBANKING, WALLET
+  provider          String             @default("Razorpay")
+  status            String             // SUCCESS, FAILED, PENDING, RECOVERED
+  failureReason     String?
+  recoveredAt       DateTime?
+  recoveryValue     Float              @default(0)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  attempts          PaymentAttempt[]
+  recoveryWorkflow  RecoveryWorkflow?
+}
+
+model PaymentAttempt {
+  id                String             @id @default(cuid())
+  paymentId         String
+  payment           Payment            @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  attemptNumber     Int
+  status            String             // SUCCESS, FAILED, PENDING
+  responseCode      String?
+  createdAt         DateTime           @default(now())
+}
+
+model RecoveryWorkflow {
+  id                  String             @id @default(cuid())
+  paymentId           String             @unique
+  payment             Payment            @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  merchantId          String
+  merchant            Merchant           @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  customerId          String?
+  customer            Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  mode                String             @default("KNOWN_CUSTOMER") // KNOWN_CUSTOMER, INSTANT_CHECKOUT
+  status              String             @default("ELIGIBLE") // ELIGIBLE, READY, IN_PROGRESS, COMPLETED, STOPPED, EXPIRED
+  recoveryScore       Int                @default(80)
+  recommendedChannel  String             @default("WHATSAPP")
+  currentAttempts     Int                @default(0)
+  maxAttempts         Int                @default(3)
+  stopReason          String?            // PAYMENT_COMPLETED, MAX_ATTEMPTS_REACHED, CUSTOMER_OPT_OUT, EXPIRED_ORDER, MANUAL_STOP
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  attempts            RecoveryAttempt[]
+}
+
+model RecoveryAttempt {
+  id                String             @id @default(cuid())
+  workflowId        String
+  workflow          RecoveryWorkflow   @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  attemptNumber     Int
+  channel           String             // WHATSAPP, SMS, EMAIL
+  status            String             @default("SENT") // SCHEDULED, SENT, DELIVERED, READ, CLICKED, FAILED
+  scheduledAt       DateTime           @default(now())
+  sentAt            DateTime?          @default(now())
+  completedAt       DateTime?
+  stopReason        String?
+  createdAt         DateTime           @default(now())
+
+  messages          CommunicationMessage[]
+}
+
+model CommunicationMessage {
+  id                String             @id @default(cuid())
+  recoveryAttemptId String
+  recoveryAttempt   RecoveryAttempt    @relation(fields: [recoveryAttemptId], references: [id], onDelete: Cascade)
+  channel           String
+  recipient         String
+  subject           String?
+  body              String
+  paymentLink       String
+  deliveryStatus    String             @default("SENT") // SENT, DELIVERED, READ, FAILED
+  sentAt            DateTime           @default(now())
+}
+
+model PaymentPrediction {
+  id                  String           @id @default(cuid())
+  merchantId          String
+  merchant            Merchant         @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  targetDate          String
+  period              String           @default("NEXT_24_HOURS")
+  overallRiskScore    Float
+  riskLevel           String           // LOW, MEDIUM, HIGH, CRITICAL
+  confidence          Float
+  vulnerableMethod    String
+  expectedPeak        String
+  trafficMultiplier   Float            @default(1.0)
+  contributingFactors String           // JSON String
+  recommendations     String           // JSON String
+  createdAt           DateTime         @default(now())
+}
+
+model Incident {
+  id                  String           @id @default(cuid())
+  merchantId          String
+  merchant            Merchant         @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  title               String
+  paymentMethod       String
+  baselineRate        Float
+  currentRate         Float
+  status              String           @default("ACTIVE") // ACTIVE, RESOLVED
+  startedAt           DateTime         @default(now())
+  resolvedAt          DateTime?
+  affectedValue       Float            @default(0)
+  possibleExplanation String
+  likelyFactor        String
+  createdAt           DateTime         @default(now())
+}
+
+model AuditLog {
+  id                String             @id @default(cuid())
+  merchantId        String
+  merchant          Merchant           @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  entityType        String
+  entityId          String
+  action            String
+  details           String
+  timestamp         DateTime           @default(now())
+}
