@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # RecoverFlow AI
 
 > **"Intelligent Payment Recovery & Failure Prediction for Merchants"**
