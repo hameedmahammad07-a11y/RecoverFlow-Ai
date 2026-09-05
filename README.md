@@ -135,5 +135,5 @@ MIT License — Created for portfolio and full-stack engineering demonstration.
 =======
 # RecoverFlowAi
 RecoverFlow AI — An intelligent payment recovery and failure prediction platform for merchants. It monitors real-time payments, detects failed transactions, automates consent-aware recovery workflows with limited messaging attempts, supports instant recovery for offline payments, and predicts potential payment failure risks.
->>>>>>> 8983c80eeab108c2493a590199dc70e344f3ce4d
+
 "# RecoverFlow-Ai" 
