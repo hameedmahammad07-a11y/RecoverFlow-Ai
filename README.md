@@ -20,38 +20,77 @@ RecoverFlow AI provides a real-time **AI Payment Operations Center** for merchan
 5. **Incident Anomaly Intelligence**: Detects unusual failure spikes (e.g. UPI failure rate jumping from 4% to 13.8%) with explainable root-cause labeling.
 
 ---
-
 ## 2. Architecture & Event Flow
 
+RecoverFlow AI follows a simple event-driven architecture that connects payment events, real-time monitoring, recovery, and failure prediction.
+
+### 🔷 System Architecture
+
+```mermaid
+flowchart TD
+
+    A["💳 Customer Payment"]
+    A --> B["💳 Payment Gateway"]
+    B --> C["📡 Payment Event"]
+
+    C --> D["⚙️ RecoverFlow AI<br/>Payment Operations Center"]
+
+    D --> E["💰 Live Payment Intelligence"]
+    D --> F["🔄 Known Customer Recovery"]
+    D --> G["⚡ Instant Checkout Recovery"]
+    D --> H["🔮 Payment Failure Prediction"]
+    D --> I["🚨 Incident Anomaly Intelligence"]
+
+    E --> J["🏪 Merchant Dashboard"]
+    F --> J
+    G --> J
+    H --> J
+    I --> J
 ```
-+--------------------------+       +----------------------------+
-|  Demo Lab / Payment API  | ----> |   Payment Processing Engine |
-+--------------------------+       +----------------------------+
-                                                 |
-                                                 v
-                                   +----------------------------+
-                                   | Prisma SQLite / Postgres DB|
-                                   +----------------------------+
-                                                 |
-                                                 v
-                                   +----------------------------+
-                                   | SSE Real-Time Event Hub    |
-                                   +----------------------------+
-                                                 |
-                       +-------------------------+-------------------------+
-                       |                                                   |
-                       v                                                   v
-        +----------------------------+                      +----------------------------+
-        |  Mode 1: Known Customer    |                      | Mode 2: Instant POS QR     |
-        |  Recovery Workflow Engine  |                      | Status Verification Engine |
-        +----------------------------+                      +----------------------------+
-                       |                                                   |
-                       v                                                   v
-        +----------------------------+                      +----------------------------+
-        | Mock WhatsApp / SMS / Mail |                      |  Double Payment Safety     |
-        | Communication Providers    |                      |  Lock & Retry Options      |
-        +----------------------------+                      +----------------------------+
+
+
+### 🔷 Payment Recovery Flow
+
+```mermaid
+flowchart TD
+
+    A["Payment Attempt"] --> B{"Payment Status"}
+
+    B -->|SUCCESS| C["Payment Completed"]
+
+    B -->|PENDING| D["Monitor & Recheck"]
+    D --> B
+
+    B -->|FAILED| E["Failure Detected"]
+
+    E --> F["Verify Payment State"]
+
+    F --> G{"Customer Type"}
+
+    G -->|Known| H["Check Order & Consent"]
+    H --> I["Recovery Workflow"]
+    I --> J["Send Secure Payment Option"]
+
+    G -->|Anonymous / Offline| K["Instant Checkout"]
+    K --> L["Verify Previous Payment"]
+    L --> M["Retry / New QR / Other Method"]
+
+    J --> N["Payment Recovered"]
+    M --> N
+
+    E --> O["Prediction Engine"]
+    O --> P["Risk Forecast"]
+    P --> Q["Merchant Alert"]
 ```
+
+
+### Architecture Highlights
+
+- **Payment Events** → Capture and process payment status changes.
+- **Real-Time Dashboard** → Shows live payments, failures, and gateway health.
+- **Recovery Engine** → Handles known-customer and anonymous/offline recovery.
+- **Prediction Engine** → Forecasts potential payment failure risk.
+- **Merchant Dashboard** → Provides actionable recovery and risk insights.
 
 ---
 
